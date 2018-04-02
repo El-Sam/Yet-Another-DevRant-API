@@ -23,19 +23,19 @@ public class UserActivityStats{
         this.favorites_count = favorites_count;
     }
 
-    public long getRants_count() {
+    public long getRantsCount() {
         return rants_count;
     }
 
-    public long getUpvotes_given() {
+    public long getUpvotesGiven() {
         return upvotes_given;
     }
 
-    public long getComments_count() {
+    public long getCommentsCount() {
         return comments_count;
     }
 
-    public long getFavorites_count() {
+    public long getFavoritesCount() {
         return favorites_count;
     }
 }

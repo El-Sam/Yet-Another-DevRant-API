@@ -118,4 +118,26 @@ public class RantService {
             throw e;
         }
     }
+
+    public HttpEntity<Rants> getUserRantsService(String username) throws Exception {
+
+        Document doc;
+
+        try {
+
+            String template = TEMPLATE_BASE+"%s/%s";
+
+            String url = String.format(template, "users", username);
+
+            doc = Jsoup.connect(url).get();
+
+            Rants rants = factory.getUserRants(username, doc);
+
+            return new ResponseEntity<>(rants, HttpStatus.OK);
+
+        } catch (IOException e) {
+            throw e;
+        }
+
+    }
 }

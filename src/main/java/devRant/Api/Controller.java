@@ -2,6 +2,7 @@ package devRant.Api;
 
 import devRant.Application.RantService;
 import devRant.Application.Resource.DetailedRant;
+import devRant.Application.Resource.Rant;
 import devRant.Application.Resource.Rants;
 import devRant.Application.Resource.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,5 +38,10 @@ public class Controller {
     @RequestMapping(value = "/users/{username}", method = RequestMethod.GET)
     public HttpEntity<User> user(@PathVariable("username") String username) throws Exception {
         return rantService.getUserService(username);
+    }
+
+    @RequestMapping(value = "/users/{username}/rants", method = RequestMethod.GET)
+    public HttpEntity<Rants> userRants(@PathVariable("username") String username) throws Exception {
+        return rantService.getUserRantsService(username);
     }
 }

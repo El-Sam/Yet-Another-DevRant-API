@@ -1,6 +1,5 @@
 package devRant.Application.Resource;
 
-import org.springframework.hateoas.ResourceSupport;
 
 public class UserAbout {
 
@@ -14,9 +13,9 @@ public class UserAbout {
 
     private String github;
 
-    private String joined_on;
+    private long joined_on;
 
-    public UserAbout(String about, String skills, String location, String website, String github, String joined_on) {
+    public UserAbout(String about, String skills, String location, String website, String github, long joined_on) {
         this.about = about;
         this.skills = skills;
         this.location = location;
@@ -45,7 +44,7 @@ public class UserAbout {
         return github;
     }
 
-    public String getJoined_on() {
+    public long getJoined_on() {
         return joined_on;
     }
 }

@@ -33,4 +33,5 @@ dependencies {
     compile group: 'org.jsoup', name: 'jsoup', version: '1.11.2'
 
     testCompile('org.springframework.boot:spring-boot-starter-test')
+    testCompile group: 'org.mockito', name: 'mockito-core', version: '2.16.0'
 }

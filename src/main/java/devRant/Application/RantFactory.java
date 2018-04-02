@@ -7,9 +7,11 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.security.Timestamp;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,47 +37,7 @@ public class RantFactory {
 
         for (Element element : elements_rants) {
 
-            String id = element.attr("data-id");
-
-            String votes = element.selectFirst(".votecount").text();
-
-            String contentText = element.select(".rantlist-title-text").text();
-
-            Optional<Element> imageElement = Optional.ofNullable(element.selectFirst(".rant-image"));
-
-            String imageUrl = null;
-
-            if(imageElement.isPresent()){
-                imageUrl = imageElement.get().getElementsByTag("img").attr("src");
-            }
-
-            List<String> tags = new ArrayList<>();
-
-            Element tagsElement = element.selectFirst(".rantlist-tags");
-
-            for (Element tag: tagsElement.children()) {
-                tags.add(tag.text());
-            }
-
-            Long commentsCount = 0L;
-
-            Optional<Element> commentCountElement = Optional.ofNullable(element.selectFirst(".commment-num"));
-
-            if(commentCountElement.isPresent()){
-                commentsCount = Long.parseLong(commentCountElement.get().text());
-            }
-
-            Rant newRant = new Rant(
-                    Long.parseLong(id),
-                    Long.parseLong(votes),
-                    contentText,
-                    imageUrl,
-                    (null == imageUrl),
-                    tags,
-                    commentsCount
-            );
-
-            newRant.add(linkTo(methodOn(Controller.class).rant(Long.parseLong(id))).withSelfRel());
+            Rant newRant = extractRantFromElement(element);
             rants.addRant(newRant);
         }
 
@@ -166,6 +128,31 @@ public class RantFactory {
         return user;
     }
 
+    public Rants getUserRants(String username, Document doc) throws Exception {
+
+        Elements rantsList = doc
+                .selectFirst("div.profile-page")
+                .selectFirst(".rantlist-bg")
+                .selectFirst(".rantlist")
+                .select(".rant-comment-row-widget")
+                ;
+
+        Rants rants = new Rants();
+
+        for (Element element: rantsList){
+
+            Rant rant = extractRantFromElement(element);
+            rants.addRant(rant);
+        }
+
+        rants.add(linkTo(methodOn(Controller.class).userRants(username)).withSelfRel());
+        rants.add(linkTo(methodOn(Controller.class).user(username)).withRel("user"));
+
+        return rants;
+
+    }
+
+
 
     ///////////////////////////////////
     ///     Protected methods       ///
@@ -175,7 +162,7 @@ public class RantFactory {
      * @param document document containing the whole page of the user
      * @return extracted the details about the user
      */
-    protected UserAbout getUserProfile(Document document){
+    protected UserAbout getUserProfile(Document document) throws ParseException {
 
         Element profileDetails = document.selectFirst("div.box-profile").selectFirst(".box-content");
 
@@ -217,10 +204,16 @@ public class RantFactory {
 
         Matcher matcher = pattern.matcher(joinedOn);
 
-        String dateString = null;
+        long joinedOnTimestamp = 0;
 
         while (matcher.find()) {
-            dateString = matcher.group(0);
+
+            DateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
+
+            Date date = formatter.parse(matcher.group(0));
+
+            joinedOnTimestamp= date.getTime() / 1000;
+
         }
 
         return new UserAbout(
@@ -229,7 +222,7 @@ public class RantFactory {
                 location,
                 website,
                 github,
-                dateString
+                joinedOnTimestamp
         );
     }
 
@@ -332,5 +325,66 @@ public class RantFactory {
         }
 
         return comments;
+    }
+
+    protected List<String> getTags(Element parentElementOfTags){
+
+        List<String> tags = new ArrayList<>();
+
+        Element tagsElement = parentElementOfTags.selectFirst(".rantlist-tags");
+
+        for (Element tag: tagsElement.children()) {
+            tags.add(tag.text());
+        }
+
+        return tags;
+    }
+
+    protected long getCommentsCount(Element parentElement){
+
+        long commentsCount = 0L;
+
+        Optional<Element> commentCountElement = Optional.ofNullable(parentElement.selectFirst(".commment-num"));
+
+        if(commentCountElement.isPresent()){
+            commentsCount = Long.parseLong(commentCountElement.get().text());
+        }
+
+        return commentsCount;
+    }
+
+    protected Rant extractRantFromElement(Element rantElement) throws Exception {
+
+        String id = rantElement.attr("data-id");
+
+        String votes = rantElement.selectFirst(".votecount").text();
+
+        String contentText = rantElement.select(".rantlist-title-text").text();
+
+        Optional<Element> imageElement = Optional.ofNullable(rantElement.selectFirst(".rant-image"));
+
+        String imageUrl = null;
+
+        if(imageElement.isPresent()){
+            imageUrl = imageElement.get().getElementsByTag("img").attr("src");
+        }
+
+        List<String> tags = getTags(rantElement);
+
+        Long commentsCount = getCommentsCount(rantElement);
+
+        Rant newRant = new Rant(
+                Long.parseLong(id),
+                Long.parseLong(votes),
+                contentText,
+                imageUrl,
+                null != imageUrl,
+                tags,
+                commentsCount
+        );
+
+        newRant.add(linkTo(methodOn(Controller.class).rant(Long.parseLong(id))).withSelfRel());
+
+        return newRant;
     }
 }
